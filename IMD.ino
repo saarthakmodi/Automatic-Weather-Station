@@ -1,8 +1,8 @@
-/* Windwane Variables*/
-const int pinWindDir = A0;            // Analog input pin for Windwane
+/* Windvane Variables*/
+const int pinWindDir = A0;            // Analog input pin for Windvane
 int val1 = 0;
-float Vin = 5;             // Input voltage (Windwane)
-float Vout = 0;            // Vout default value (Windwane)
+float Vin = 5;             // Input voltage (Windvane)
+float Vout = 0;            // Vout default value (Windvane)
 float Rref = 9999;          // Reference resistor's value in ohms (you can give this value in kiloohms or megaohms - the resistance of the tested resistor will be given in the same units)
 float R = 0;               // Tested resistors default value
 float theta = 0;
