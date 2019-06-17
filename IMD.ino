@@ -1,4 +1,3 @@
-
 /* Windwane Variables*/
 const int pinWindDir = A0;            // Analog input pin for Windwane
 int val1 = 0;
@@ -22,9 +21,11 @@ volatile int rainCount;
 
 /*Serial Port 2 is used for Anemometer*/
 float windSpeed = 0;
+String inwString = "";
+String speedString = "";
 
 /*Serial Port 3 is used for Barometer */
-String inString = "";
+String inbString = "";
 String avString = "";
 float avPress = 0;
 
@@ -60,12 +61,33 @@ void setup() {
   Serial3.begin(19200);
 
   pinMode(pinRainfall, INPUT);
-  attachInterrupt(0, rainCount, RISING);
+  attachInterrupt(0, rain_count, RISING);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  for(int i = 0; i<55; i++){
+  
+    while(Serial2.available()>0){
+    Serial2.flush();
+    int inChar = Serial2.read();
+    if(inChar != ' '){
+      inwString += (char)inChar;
+    }
+    else{
+      for(int i=inwString.length()-5; i<inwString.length(); i++){
+        speedString += inwString[i];
+      }
+      windSpeed = speedString.toFloat();
+      Serial.print("Wind speed = ");
+      Serial.print(windSpeed);
+      Serial.println(" Kts");
+      inwString = "";
+      speedString = ""; 
+      break;
+    
+    }
+  }
+  delay(100);
     val1 = analogRead(pinWindDir);
     Vout = (Vin * val1) / 1023;    // Convert Vout to volts
     R = Rref * (1 / ((Vin / Vout) - 1));  // Formula to calculate tested resistor's value                          // Delay in milliseconds between reeds
@@ -73,41 +95,63 @@ void loop() {
     if(theta > 360){
       theta = theta - 360;
     }
-    delay(100);
-  
-    val2 = analogRead(pinTemp);
-    val3 = analogRead(pinHumidity);
-    temp = (val1*5/1023)*100-40;    //Temperature value mapped to -40 to +60 celsuis
-    hum = (val2*5/1023)*100;        //Humidity value mapped to 0 - 100%
-    sumTemperature += temp;
-    sumHumidity += hum;
-    delay(100);
+    Serial.print("Angle = ");
+    Serial.print(theta);
+    Serial.println(" °");
     
-  
+    delay(150);
+
     while(Serial3.available()>0){
       int inChar = Serial3.read();
       if(inChar != '\n'){
-        inString += (char)inChar;
+        inbString += (char)inChar;
         
       }
       else{
-        for(int i=25; i<31; i++){
-          avString += inString[i];
+        for(int i= inbString.length() - 23; i<inbString.length()-14; i++){
+          avString += inbString[i];
         }
         avPress = avString.toFloat();
         sumPressure += avPress;
-        inString = "";
+        Serial.print("Pressure =");
+        Serial.print(avPress);
+        Serial.println(" hPa");
+
+        inbString = "";
         avString = "";
         break;
       }
     }
+  
+    val2 = analogRead(pinTemp);
+    val3 = analogRead(pinHumidity);
+    temp = (val2*5/1023)*100-40;    //Temperature value mapped to -40 to +60 celsuis
+    hum = (val3*5/1023)*100;        //Humidity value mapped to 0 - 100%
+    sumTemperature += temp;
+    sumHumidity += hum;
+    Serial.print("Temperature = ");
+    Serial.print(temp);
+    Serial.println(" °C");
+    Serial.print("Humidity = ");
+    Serial.print(hum);
+    Serial.println(" %");
+    
+    delay(100);
+
+    
+      Serial.print("Rain count = ");
+      Serial.println(rainCount);
+      delay(1000);    
+  Serial.println("");
+  
+    
   
     northComp = windSpeed * cos(theta);
     sumOneNorthComp += northComp;
     eastComp = windSpeed * sin(theta);
     sumOneEastComp += eastComp;
 
-      if(i == 55){
+    /*  if(i == 55){
         oneTemperature = sumTemperature/55;
         oneHumidity = sumHumidity / 55;
         onePressure = sumPressure / 55;
@@ -132,11 +176,9 @@ void loop() {
         Serial.print(atan(oneNorthComp / oneEastComp));
         Serial.println(" °");
         
-      }
+      }*/
   }
   
-  
-}
 
 float asin(float c){
   float out;
@@ -178,3 +220,4 @@ float atan(float c){
 void rain_count(){
   rainCount++;
 }
+
